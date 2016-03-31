@@ -1,39 +1,29 @@
 package model;
 
-import java.util.Date;
+import java.io.Serializable;
 
-public class Message {
+public class Message implements Serializable {
 
-	public String username;
-	public Date time;
-	public String message;
+	// The different types of message sent by the Client
+	// WHOISIN to receive the list of the users connected
+	// MESSAGE an ordinary message
+	// LOGOUT to disconnect from the Server
+	public static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2;
+	private int type;
+	private String message;
 	
-	public String getUsername() {
-		return username;
+	// constructor
+	public Message(int type, String message) {
+		this.type = type;
+		this.message = message;
 	}
-	public void setUsername(String username) {
-		this.username = username;
-	}
-	public Date getTime() {
-		return time;
-	}
-	public void setTime(Date time) {
-		this.time = time;
+	
+	// getters
+	public int getType() {
+		return type;
 	}
 	public String getMessage() {
 		return message;
-	}
-	public void setMessage(String message) {
-		this.message = message;
-	}
-	
-	public Message(){};
-	
-	public Message(String username, Date time, String message) {
-		super();
-		this.username = username;
-		this.time = time;
-		this.message = message;
 	}
 		
 }
