@@ -40,10 +40,12 @@ public class Server {
 	}
 	
 	public Server(int pPort) {
-		//Liste des adresses clients
+		//Liste des clients
 		clientList = new ArrayList<ClientThread>();
 		port = pPort;
+		// formattage de la date
 		sdf = new SimpleDateFormat("HH:mm:ss");
+		//activation du mode discover
 		discovery = new DiscoveryService();
 	}
 	
@@ -127,9 +129,9 @@ public class Server {
 		private ObjectInputStream sInput;
 		private ObjectOutputStream sOutput;
 		
-		String username;
-		Message msg;
-		String date;
+		private String username;
+		private Message msg;
+		private String date;
 		
 		public ClientThread(Socket socket){
 			//id = ++uniqueId;
@@ -183,6 +185,9 @@ public class Server {
 						
 						writeMsg((i+1) + "- " + ct.username + " depuis " + ct.date);
 					}
+					break;
+				case Message.USERNAME:
+					this.username = message;
 					break;
 				}
 			}

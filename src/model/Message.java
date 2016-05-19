@@ -4,11 +4,11 @@ import java.io.Serializable;
 
 public class Message implements Serializable {
 
-	// The different types of message sent by the Client
-	// WHOISIN to receive the list of the users connected
-	// MESSAGE an ordinary message
-	// LOGOUT to disconnect from the Server
-	public static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2;
+	// Différents types de message:
+	// WHOISIN liste user connecté
+	// MESSAGE message classique
+	// LOGOUT déconnexion
+	public static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2, USERNAME =3;
 	private int type;
 	private String message;
 	

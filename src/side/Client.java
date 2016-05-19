@@ -51,17 +51,21 @@ public class Client {
 		this.username = username;
 	}
 	
-	
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
 	/**
 	 * Démarrage
 	 * @param args
 	 */
  	public static void main(String[] args) {
 		Client cl = new Client();
-		DatagramSocket sock = null;
 		Server srv = null;
-		
-		int test = args.length;
 		
 		if((args.length == 1) && (args[0].equals("-s"))){
 			srv = new Server();
@@ -69,20 +73,20 @@ public class Client {
 		
 		for(int i = 0; i < args.length -1; i++){
 			switch(args[i]){
-				case "-h":
+				case "-h": // affichage de l'aide
 					showHelp();
 					break;
-				case "--help":
+				case "--help": // affichage de l'aide
 					showHelp();
 					break;
-				case "-p":
+				case "-p": // spécification du port
 					cl.port = Integer.parseInt(args[i+1]);
 					break;
-				case "-i":
-					cl.server = args[i+1];
+				case "-i": // spécification de l'ip du serveur
+					cl.server = args[i+1]; 
 					discover = false;
 					break;
-				case "-u":
+				case "-u": // spécification du username
 					cl.username = args[i+1];
 					break;
 				default:
@@ -104,25 +108,48 @@ public class Client {
 				System.out.println("> ");
 				String msg = scan.nextLine();
 				
-				if(msg.equalsIgnoreCase("LOGOUT")){
+				if(msg.startsWith("/username")){
+					String[] username2 = msg.split(" ");
+					if (username2.length >= 2)
+					{
+						cl.setUsername(username2[1]);
+						cl.sendMessage(new Message(Message.USERNAME, username2[1]));
+						cl.display("Votre username est maintenant : " + cl.getUsername());
+					} else {
+						cl.display("Vous devez spécifier un username");
+					}
+				} else if(msg.equalsIgnoreCase("LOGOUT")){
+					//déconnexion
 					cl.sendMessage(new Message(Message.LOGOUT, ""));
 					send = false;
 				} else if (msg.equalsIgnoreCase("WHOISIN")){
+					// affiche la liste des personnes connectées
 					cl.sendMessage(new Message(Message.WHOISIN, ""));
 				} else {
+					// envoit le message
 					cl.sendMessage(new Message(Message.MESSAGE, msg));
 				}
 			}
+			scan.close();
 			cl.disconnect();
 		}
 	}
 	
+ 	/**
+ 	 * Affiche le message d'aide.
+ 	 */
  	private static void showHelp(){
  		System.out.println("Option:");
 		System.out.println("-s lancement du serveur");
 		System.out.println("-i ip du serveur cible");
 		System.out.println("-p port du serveur cible");
 		System.out.println("-u username");
+		System.out.println("-h affiche cette aide");
+		System.out.println("");
+		System.out.println("Message chat:");
+		System.out.println("/username username	permet de changer de username");
+		System.out.println("whoisin	affiche la liste des personnes connectées");
+		System.out.println("logout	déconnecte la session client du serveur");
 	}
  	
  	/////////// Methods ///////////
@@ -164,7 +191,6 @@ public class Client {
 
 	/**
 	 * Permet de recherche un serveur sur le réseau
-	 * @param cl
 	 */
 	private void discover(){
 		try{
@@ -181,7 +207,7 @@ public class Client {
 			} catch (Exception e) {
 			}
 
-			// Broadcast the message over all the network interfaces
+			// Broadcast sur toutes les interfaces de l'ordinateur
 			Enumeration interfaces = NetworkInterface.getNetworkInterfaces();
 			while (interfaces.hasMoreElements()) {
 				NetworkInterface networkInterface = (NetworkInterface) interfaces.nextElement();
@@ -196,7 +222,7 @@ public class Client {
 						continue;
 					}
 
-					// Send the broadcast package!
+					// Envoit du packet de broadcast
 					try {
 						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, broadcast, 8888);
 						sock.send(sendPacket);
@@ -208,7 +234,7 @@ public class Client {
 
 			display(">>> Waiting for a reply!");
 
-			//Wait for a response
+			//En attente de réponse
 			byte[] recvBuf = new byte[15000];
 			DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
 			sock.setSoTimeout(TIMEOUT);
@@ -225,7 +251,7 @@ public class Client {
 				this.port = Integer.parseInt(extract);
 			}
 
-			//Close the port!
+			//Fermeture socket
 			sock.close();
 		} catch (SocketTimeoutException ste){
 			Server srv = new Server();
@@ -234,10 +260,15 @@ public class Client {
 		} catch (IOException ex) {}
 	}
 	
+	/**
+	 * Lance la connexion au serveur
+	 * @return
+	 */
 	private boolean connect(){
 		display("Connecting to " + server + " on port " + port);
 		Socket soc = null;
 		try {
+			//création socket de connexion
 			soc = new Socket(server, port);
 		} catch (UnknownHostException e) {
 			display("Destination not found : " + e.getLocalizedMessage());
@@ -247,9 +278,12 @@ public class Client {
 			return false;
 		}
 		if( soc != null ) {
+			// Affichage d'un messgae si connexion réussie
 			display("Connected to " + soc.getRemoteSocketAddress());
 			try {
+				// Entrée (serveur -> client)
 				sInput = new ObjectInputStream(soc.getInputStream());
+				//Sortie (client -> serveur)
 				sOutput = new ObjectOutputStream(soc.getOutputStream());
 			} catch (IOException e){
 				display(e.toString());
@@ -282,8 +316,10 @@ public class Client {
 		public void run(){
 			while(listen){
 				try{
+					// lit le message du serveur
 					String msg = (String) sInput.readObject();
 
+					//affiche le message
 					System.out.println(msg);
 					System.out.print("> ");
 					
